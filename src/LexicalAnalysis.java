@@ -56,7 +56,8 @@ public class LexicalAnalysis {
 
 		// on cherche les operateurs
 		for (int i = 0; i < arrayDesLignes.length; i++) {
-			if (arrayDesLignes[i].matches("[+ - * / = += -= *= /= ++ -- <= >= < > || && !]")) {
+			if (arrayDesLignes[i].matches(
+					"\\<|\\>|\\=|\\+|\\-|\\*|\\<=|\\>=|\\++|\\--|\\/|\\-=|\\+=|\\*=|\\/=|\\==|\\|\\||\\&&|\\!")) {
 				operateurs.add(arrayDesLignes[i]);
 			}
 		}
