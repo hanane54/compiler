@@ -1,3 +1,5 @@
+package inpt.ac.ma;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -13,33 +15,61 @@ public class LexicalAnalysis {
 	// il faut ajouter l'exception
 	public static void main(String[] args) throws FileNotFoundException {
 
-		String fichier = "C:\\Users\\global\\Downloads\\input.mrl";
-		fichier.endsWith(".mrl");
-		if (fichier.endsWith(".mrl")) {
-			Scanner lecteur = new Scanner(new File(fichier));
+		// this in case we want purselves to set the path
+		// String fichier = "compiler\\badSyntaxFile.mrl";
+		// or "compiler\\badSyntaxFile.mrl"
+
+		// this in case we want the user to enter the file
+		Scanner keyB = new Scanner(System.in);
+		System.out.println("Enter your file's name: ");
+		String nomDuFichier = keyB.nextLine();
+
+		// verifier l'extension du fichier
+		if (nomDuFichier.endsWith(".mrl")) {
+
+			Scanner lecteur = new Scanner(new File(nomDuFichier));
 			ArrayList<String> lignes = new ArrayList<>();
+			ArrayList<String> erreurs = new ArrayList<>();
 			Map<String, List<String>> tableauFinal = new HashMap<String, List<String>>();
 			List<String> motsCles = new ArrayList<String>();
 			List<String> operateurs = new ArrayList<String>();
 			List<String> nombres = new ArrayList<String>();
 			List<String> variables = new ArrayList<String>();
 			List<String> caractereSpecial = new ArrayList<String>();
+			int numeroDeLigne = 1;
 
 			while (lecteur.hasNextLine()) {
+
 				String ligne = lecteur.nextLine();
 
 				// s'il s'agit d'un commentaire on va negliger la ligne
 				if (ligne.startsWith("//")) {
+					numeroDeLigne++;
 					continue;
 				}
+
+				// on decompose les elements de l'instruction
 				if (ligne.length() != 0) {
 					// les expressions regulieres pour la decomposition
 					String[] ligneSplit = ligne.trim().split("\\s+|\\s*,\\s*|\\;+|\\[+|\\]+|\\\"+|\\:+");
 					List<String> liste = Arrays.asList(ligneSplit);
 					lignes.addAll(liste);
 				}
-			}
 
+				// detection des erreurs syntaxiques
+				Boolean resultat = Parentheses.checkValidity(ligne);
+				if (!resultat) {
+					String erreur = "Syntax error a parenthesis expected at line number : " + numeroDeLigne;
+					erreurs.add(erreur);
+				}
+				if (!ligne.endsWith(";")) {
+					String erreurPointVirgule = "syntax error \';\' expected to complete the instruction at line : "
+							+ numeroDeLigne;
+					erreurs.add(erreurPointVirgule);
+				}
+				numeroDeLigne++;
+
+			}
 			if (lignes.contains("/*") || lignes.contains("*/")) {
 				if (lignes.contains("/*")) {
 					int debutComment = lignes.indexOf("/*");
@@ -109,20 +139,25 @@ public class LexicalAnalysis {
 			}
 			tableauFinal.put("variables", variables);
 
-			// on affiche les lignes
-			System.out.println("Les mots séparés: ");
-			System.out.println(lignes);
-
-			// afficher le tableau final
-			for (Map.Entry<String, List<String>> entry : tableauFinal.entrySet()) {
-				String clé = entry.getKey();
-				List<String> valeurs = entry.getValue();
-				System.out.print(clé + ": ");
-				System.out.println(valeurs);
+			// afficher les erreurs
+			if (erreurs != null) {
+				for (int j = 0; j < erreurs.size(); j++) {
+					System.out.println(erreurs.get(j));
+				}
 			}
 
+			/**
+			 * // on affiche les lignes System.out.println("Les mots séparés: ");
+			 * System.out.println(lignes);
+			 * 
+			 * // afficher le tableau final for (Map.Entry<String, List<String>> entry :
+			 * tableauFinal.entrySet()) { String clé = entry.getKey(); List<String> valeurs
+			 * = entry.getValue(); System.out.print(clé + ": ");
+			 * System.out.println(valeurs); }
+			 **/
+
 		} else {
-			System.out.println("veuillez entrer un fichier de l'extension mrl");
+			System.out.println("Please enter a file with the extension mrl");
 		}
 
 	}

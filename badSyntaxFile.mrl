@@ -1,0 +1,8 @@
+start;
+int number=4 
+//comment test
+if (true) then {do}
+for (int i=0; i<10;i++) {do this};
+( open bracket test;
+);
+test
