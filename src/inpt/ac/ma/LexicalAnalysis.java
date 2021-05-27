@@ -58,15 +58,31 @@ public class LexicalAnalysis {
 
 				// detection des erreurs syntaxiques
 				Boolean resultat = Parentheses.checkValidity(ligne);
+
+				// verifier que le programme commence par le mot cle
+				if (!checkStartingKeyWord(numeroDeLigne, ligne)) {
+					String erreurDebutProg = "Couldn't find the starting keyword at the first Line";
+					erreurs.add(erreurDebutProg);
+					break;
+				}
+
 				if (!resultat) {
 					String erreur = "Syntax error a parenthesis expected at line number : " + numeroDeLigne;
 					erreurs.add(erreur);
 				}
+
 				if (!ligne.endsWith(";")) {
 					String erreurPointVirgule = "syntax error \';\' expected to complete the instruction at line : "
 							+ numeroDeLigne;
 					erreurs.add(erreurPointVirgule);
 				}
+
+				if (!checkStartsWithKeyword(ligne)) {
+					String erreurMotCle = "Syntax error the instruction should start with a keyword at line :"
+							+ numeroDeLigne;
+					erreurs.add(erreurMotCle);
+				}
+
 				numeroDeLigne++;
 
 			}
@@ -160,5 +176,30 @@ public class LexicalAnalysis {
 			System.out.println("Please enter a file with the extension mrl");
 		}
 
+	}
+
+	// methode de verification si la ligne commence par un mot cle du langage
+	private static boolean checkStartsWithKeyword(String ligne) {
+		String[] motsClesDuLangage = { "byte", "const", "double", "false", "long", "negat", "null", "posit",
+				"short",
+				"true", "bool", "char", "float", "int", "string", "void", "if", "else", "elif", "for", "while",
+				"case", "default", "end", "end", "exit", "fun", "print", "return", "start", "test", "tab" };
+		for (int i = 0; i < motsClesDuLangage.length; i++) {
+			if (ligne.startsWith(motsClesDuLangage[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean checkStartingKeyWord(int numeroDeLigne, String ligne) {
+		if (numeroDeLigne == 1) {
+			if (ligne.startsWith("\\s+start\\s+")) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return true;
 	}
 }
