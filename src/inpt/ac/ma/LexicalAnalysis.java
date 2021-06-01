@@ -82,6 +82,11 @@ public class LexicalAnalysis {
 							+ numeroDeLigne;
 					erreurs.add(erreurMotCle);
 				}
+				if(!checkLastLine(lecteur)) {
+					String erreurExit ="Syntax error the last instruction of code must end by an 'exit'";
+					erreurs.add(erreurExit);
+				}
+				
 
 				numeroDeLigne++;
 
@@ -163,12 +168,12 @@ public class LexicalAnalysis {
 			}
 
 			/**
-			 * // on affiche les lignes System.out.println("Les mots sÈparÈs: ");
+			 * // on affiche les lignes System.out.println("Les mots s√©par√©s: ");
 			 * System.out.println(lignes);
 			 * 
 			 * // afficher le tableau final for (Map.Entry<String, List<String>> entry :
-			 * tableauFinal.entrySet()) { String clÈ = entry.getKey(); List<String> valeurs
-			 * = entry.getValue(); System.out.print(clÈ + ": ");
+			 * tableauFinal.entrySet()) { String cl√© = entry.getKey(); List<String> valeurs
+			 * = entry.getValue(); System.out.print(cl√© + ": ");
 			 * System.out.println(valeurs); }
 			 **/
 
@@ -201,5 +206,19 @@ public class LexicalAnalysis {
 			}
 		}
 		return true;
+	}
+	private static boolean checkLastLine(Scanner lecteur) {
+		 String lastLine = null;
+		while (lecteur.hasNextLine()) {
+		        lastLine = lecteur.nextLine();
+		    }
+		// √† la fin de la boucle ,dans lastLine, on aura la derni√®re ligne
+		if(lastLine.startsWith("exit")) {
+			
+			return true;
+			
+		}else {
+			return false;
+		}
 	}
 }
