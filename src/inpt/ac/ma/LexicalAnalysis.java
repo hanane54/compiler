@@ -1,205 +1,198 @@
 package inpt.ac.ma;
 
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
-public class LexicalAnalysis {
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-	// on ne peut pas utiliser la classe File sans FileNotFoundException
-	// il faut ajouter l'exception
-	public static void main(String[] args) throws FileNotFoundException {
+@SuppressWarnings("serial")
+public class LexicalAnalysis extends JFrame {
 
-		// this in case we want purselves to set the path
-		// String fichier = "compiler\\badSyntaxFile.mrl";
-		// or "compiler\\badSyntaxFile.mrl"
+	private JPanel contentPane;
+	private final JFileChooser openFileChooser;
 
-		// this in case we want the user to enter the file
-		Scanner keyB = new Scanner(System.in);
-		System.out.println("Enter your file's name: ");
-		String nomDuFichier = keyB.nextLine();
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
 
-		// verifier l'extension du fichier
-		if (nomDuFichier.endsWith(".mrl")) {
-
-			Scanner lecteur = new Scanner(new File(nomDuFichier));
-			ArrayList<String> lignes = new ArrayList<>();
-			ArrayList<String> erreurs = new ArrayList<>();
-			Map<String, List<String>> tableauFinal = new HashMap<String, List<String>>();
-			List<String> motsCles = new ArrayList<String>();
-			List<String> operateurs = new ArrayList<String>();
-			List<String> nombres = new ArrayList<String>();
-			List<String> variables = new ArrayList<String>();
-			List<String> caractereSpecial = new ArrayList<String>();
-			int numeroDeLigne = 1;
-
-			while (lecteur.hasNextLine()) {
-
-				String ligne = lecteur.nextLine();
-
-				// s'il s'agit d'un commentaire on va negliger la ligne
-				if (ligne.startsWith("//")) {
-					numeroDeLigne++;
-					continue;
-				}
-
-				// on decompose les elements de l'instruction
-				if (ligne.length() != 0) {
-					// les expressions regulieres pour la decomposition
-					String[] ligneSplit = ligne.trim().split("\\s+|\\s*,\\s*|\\;+|\\[+|\\]+|\\\"+|\\:+");
-					List<String> liste = Arrays.asList(ligneSplit);
-					lignes.addAll(liste);
-				}
-
-				// detection des erreurs syntaxiques
-				Boolean resultat = Parentheses.checkValidity(ligne);
-
-				// verifier que le programme commence par le mot cle
-				if (!checkStartingKeyWord(numeroDeLigne, ligne)) {
-					String erreurDebutProg = "Couldn't find the starting keyword at the first Line";
-					erreurs.add(erreurDebutProg);
-					break;
-				}
-
-				if (!resultat) {
-					String erreur = "Syntax error a parenthesis expected at line number : " + numeroDeLigne;
-					erreurs.add(erreur);
-				}
-
-				if (!ligne.endsWith(";")) {
-					String erreurPointVirgule = "syntax error \';\' expected to complete the instruction at line : "
-							+ numeroDeLigne;
-					erreurs.add(erreurPointVirgule);
-				}
-
-				if (!checkStartsWithKeyword(ligne)) {
-					String erreurMotCle = "Syntax error the instruction should start with a keyword at line :"
-							+ numeroDeLigne;
-					erreurs.add(erreurMotCle);
-				}
-
-				numeroDeLigne++;
-
-			}
-			if (lignes.contains("/*") || lignes.contains("*/")) {
-				if (lignes.contains("/*")) {
-					int debutComment = lignes.indexOf("/*");
-					// indexOf retourne la position de la 1ere occurence de */
-					// donc la fin du commentaire courant
-					int finComment = lignes.indexOf("*/");
-					int commentaire = finComment - debutComment + 1;
-
-					while (commentaire > 0) {
-						lignes.remove(debutComment);
-						commentaire = commentaire - 1;
-					}
+		EventQueue.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					LexicalAnalysis frame = new LexicalAnalysis();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
-
-			String[] arrayDesLignes = lignes.toArray(new String[lignes.size()]);
-
-			// on cherche les operateurs
-			for (int i = 0; i < arrayDesLignes.length; i++) {
-				if (arrayDesLignes[i].matches(
-						"\\<|\\>|\\=|\\+|\\-|\\*|\\<=|\\>=|\\++|\\--|\\/|\\-=|\\+=|\\*=|\\/=|\\==|\\|\\||\\&&|\\!")) {
-					operateurs.add(arrayDesLignes[i]);
-				}
-			}
-			// on ajoute la liste des operateurs au tableau final
-			tableauFinal.put("operateurs", operateurs);
-
-			// les caracteres speciaux
-			for (int i = 0; i < arrayDesLignes.length; i++) {
-				if (arrayDesLignes[i].matches("\\(|\\)|\\{|\\}")) {
-					caractereSpecial.add(arrayDesLignes[i]);
-				}
-			}
-			// on ajoute la liste des caracteres speciaux au tableau final
-			tableauFinal.put("caracteres speciaux", caractereSpecial);
-
-			// trouver les mots cles
-			for (int i = 0; i < arrayDesLignes.length; i++) {
-
-				if (arrayDesLignes[i]
-						.matches(
-								"\\bbyte\\b+|\\bconst\\b+|\\bdouble\\b+|\\bfalse\\b+|\\blong\\b+|\\bnegat\\b+|\\bnull\\b+|\\bposit\\b+|\\bshort\\b+|\\btrue\\b+|\\bbool\\b+|\\bchar\\b+|\\bfloat\\b+|\\bint\\b+|\\bstring\\b+|\\bvoid\\b+|\\btab\\b+|\\bif\\b+|\\belse\\b+|\\belif\\b+|\\bfor\\b+|\\bwhile\\b+|\\bcase\\b+|\\bdefault\\b+|\\bend\\b+|\\bfun\\b+|\\bprint\\b+|\\breturn\\b+|\\btest\\b+|\\start\\b+|\\exit\\b")) {
-					motsCles.add(arrayDesLignes[i]);
-				}
-			}
-			// on ajoute la liste des mots cles au tableau final
-			tableauFinal.put("mots cles", motsCles);
-
-			// les nombres
-			for (int i = 0; i < arrayDesLignes.length; i++) {
-				if (arrayDesLignes[i].matches("\\d+|\\d+\\.\\d+")) {
-					nombres.add(arrayDesLignes[i]);
-				}
-			}
-			tableauFinal.put("nombres", nombres);
-
-			// les variables
-			for (int i = 0; i < arrayDesLignes.length; i++) {
-				if (arrayDesLignes[i].matches("\\w+")
-						&& !arrayDesLignes[i].matches("\\d+|\\d+\\.\\d+")
-						&& !arrayDesLignes[i].matches(
-								"\\bbyte\\b+|\\bconst\\b+|\\bdouble\\b+|\\bfalse\\b+|\\blong\\b+|\\bnegat\\b+|\\bnull\\b+|\\bposit\\b+|\\bshort\\b+|\\btrue\\\\b+|\\bbool\\b+|\\bchar\\b+|\\bfloat\\b+|\\bint\\b+|\\bstring\\b+|\\bvoid\\b+|\\btab\\b+|\\bif\\b+|\\belse\\b+|\\belif\\b+|\\bfor\\b+|\\bwhile\\b+|\\bcase\\b+|\\bdefault\\b+|\\bend\\b+|\\bfun\\b+|\\bprint\\b+|\\breturn\\b+|\\btest\\b")) {
-					if (!variables.contains(arrayDesLignes[i])) {
-						variables.add(arrayDesLignes[i]);
-					}
-				}
-			}
-			tableauFinal.put("variables", variables);
-
-			// afficher les erreurs
-			if (erreurs != null) {
-				for (int j = 0; j < erreurs.size(); j++) {
-					System.out.println(erreurs.get(j));
-				}
-			}
-
-			/**
-			 * // on affiche les lignes System.out.println("Les mots séparés: ");
-			 * System.out.println(lignes);
-			 * 
-			 * // afficher le tableau final for (Map.Entry<String, List<String>> entry :
-			 * tableauFinal.entrySet()) { String clé = entry.getKey(); List<String> valeurs
-			 * = entry.getValue(); System.out.print(clé + ": ");
-			 * System.out.println(valeurs); }
-			 **/
-
-		} else {
-			System.out.println("Please enter a file with the extension mrl");
-		}
-
+		});
 	}
 
-	// methode de verification si la ligne commence par un mot cle du langage
-	private static boolean checkStartsWithKeyword(String ligne) {
-		String[] motsClesDuLangage = { "byte", "const", "double", "false", "long", "negat", "null", "posit",
-				"short",
-				"true", "bool", "char", "float", "int", "string", "void", "if", "else", "elif", "for", "while",
-				"case", "default", "end", "end", "exit", "fun", "print", "return", "start", "test", "tab" };
-		for (int i = 0; i < motsClesDuLangage.length; i++) {
-			if (ligne.startsWith(motsClesDuLangage[i])) {
-				return true;
-			}
-		}
-		return false;
-	}
+	/**
+	 * Create the frame.
+	 */
+	public LexicalAnalysis() {
 
-	private static boolean checkStartingKeyWord(int numeroDeLigne, String ligne) {
-		if (numeroDeLigne == 1) {
-			if (ligne.startsWith("\\s+start\\s+")) {
-				return true;
-			} else {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 841, 615);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+
+		JButton openFileButton = new JButton("Open file...");
+		openFileButton.setBackground(new Color(245, 255, 250));
+
+		openFileButton.setBounds(224, 29, 127, 23);
+		contentPane.add(openFileButton);
+
+		JLabel messageLabel = new JLabel("");
+		messageLabel.setForeground(Color.BLACK);
+		messageLabel.setFont(new Font("Tahoma", Font.PLAIN, 13));
+		messageLabel.setBackground(Color.PINK);
+		messageLabel.setBounds(361, 29, 394, 24);
+		contentPane.add(messageLabel);
+
+		JTextArea txtOutput = new JTextArea();
+		txtOutput.setWrapStyleWord(true);
+		txtOutput.setBackground(new Color(240, 230, 140));
+		txtOutput.setText("Output Texte :");
+		txtOutput.setBounds(224, 66, 546, 416);
+		contentPane.add(txtOutput);
+
+		JLabel imgLabel = new JLabel("");
+		Image img = new ImageIcon(this.getClass().getResource("/amarilla.png")).getImage();
+		imgLabel.setIcon(new ImageIcon(img));
+		imgLabel.setBounds(0, 0, 200, 173);
+		contentPane.add(imgLabel);
+		openFileChooser = new JFileChooser();
+		openFileChooser.setCurrentDirectory(new File("C:\\temp"));
+		openFileChooser.setFileFilter(new FileNameExtensionFilter("mrl file", "mrl"));
+		openFileButton.addActionListener(new ActionListener() {
+			@SuppressWarnings("resource")
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int returnValue = openFileChooser.showOpenDialog(null);
+
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+
+					File selected = openFileChooser.getSelectedFile();
+					String fileName = selected.getName();
+					if (fileName.endsWith("mrl")) {
+						messageLabel.setText("File successfully load!");
+						try {
+							BufferedReader in;
+							in = new BufferedReader(new FileReader(selected));
+							ArrayList<String> erreurs = new ArrayList<>();
+							int numeroDeLigne = 1;
+
+							for (String ligne; (ligne = in.readLine()) != null;) {
+
+// txtOutput.setText(txtOutput.getText() + "\n" + ligne);
+
+								// s'il s'agit d'un commentaire on va negliger la ligne
+								if (ligne.startsWith("//")) {
+									numeroDeLigne++;
+									continue;
+								}
+
+								// detection des erreurs syntaxiques
+								Boolean resultat = Parentheses.checkValidity(ligne);
+
+								// verifier que le programme commence par le mot cle
+								if (!checkStartingKeyWord(numeroDeLigne, ligne)) {
+									String erreurDebutProg = "Couldn't find the starting keyword at the first Line";
+									erreurs.add(erreurDebutProg);
+									break;
+								}
+
+								if (!resultat) {
+									String erreur = "Syntax error a parenthesis expected at line number : "
+											+ numeroDeLigne;
+									erreurs.add(erreur);
+								}
+
+								if (!ligne.endsWith(";")) {
+									String erreurPointVirgule = "syntax error \';\' expected to complete the instruction at line : "
+											+ numeroDeLigne;
+									erreurs.add(erreurPointVirgule);
+								}
+
+								if (!checkStartsWithKeyword(ligne)) {
+									String erreurMotCle = "Syntax error the instruction should start with a keyword at line :"
+											+ numeroDeLigne;
+									erreurs.add(erreurMotCle);
+								}
+
+								numeroDeLigne++;
+							}
+
+							// afficer les erreurs
+							if (erreurs != null) {
+								for (int j = 0; j < erreurs.size(); j++) {
+									txtOutput.setText(txtOutput.getText() + "\n" + erreurs.get(j));
+								}
+							}
+							in.close();
+
+						} catch (FileNotFoundException e1) {
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+					} else {
+						JOptionPane.showMessageDialog(openFileButton, "Please enter a file with the extension mrl");
+					}
+
+				} else {
+					messageLabel.setText("No file chosen");
+				}
+			}
+
+			private boolean checkStartsWithKeyword(String ligne) {
+				String[] motsClesDuLangage = { "byte", "const", "double", "false", "long", "negat", "null", "posit",
+						"short",
+						"true", "bool", "char", "float", "int", "string", "void", "if", "else", "elif", "for", "while",
+						"case", "default", "end", "end", "exit", "fun", "print", "return", "start", "test", "tab" };
+				for (int i = 0; i < motsClesDuLangage.length; i++) {
+					if (ligne.startsWith(motsClesDuLangage[i])) {
+						return true;
+					}
+				}
 				return false;
 			}
-		}
-		return true;
+
+			private boolean checkStartingKeyWord(int numeroDeLigne, String ligne) {
+				if (numeroDeLigne == 1) {
+					if (ligne.contains("start")) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+				return true;
+			}
+		});
+
 	}
 }
